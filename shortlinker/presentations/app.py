@@ -1,17 +1,12 @@
 from fastapi import FastAPI, Response , Path , HTTPException
-import uvicorn
 from pydantic import BaseModel
 from services.short_link_service import ShortLinkService
+import re
 
 
-# 1)Добавить проверку корректности введеной ссылки - регулярные выражения
-
-# 2)описание методов в свагере
-
-# 3)автоматическую подстановку https:// если в начале поданной ссылки нет этого протакола
 
 app=FastAPI(title='Сервис генерации коротких ссылок', 
-            description="Простенький тестовы  й сервис для создания коротких ссылок"\
+            description="Простенький тестовый сервис для создания коротких ссылок"
 )
 short_link_service=ShortLinkService()
 
@@ -33,13 +28,26 @@ class PutLink(BaseModel):
 @app.put("/link")
 def put_link(long_link:PutLink) -> PutLink:
     """ 
-    Метод создания короткой ссылки по длмнной
+    Метод создания короткой ссылки по длинной
     """
-    
-    
+
     short_link=short_link_service.put_link(long_link.link)
     
     return PutLink(link=f'http://localhost:8000/short/{short_link}')
+
+
+def is_valid_url(url): ## Проверка ссылки на корректность
+  
+    regex = re.compile(
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' # Домен
+        r'localhost|' # Локальный хост
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|' # IP-адрес (IPv4)
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)' # IP-адрес (IPv6)
+        r'(?::\d+)?' # Порт
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE) # Путь
+
+    return re.match(regex, url) is not None
+
 
 
 @app.get("/short/{short_link}")
@@ -49,6 +57,12 @@ def get_link(short_link:str=Path(...)) -> Response:
     """
     
     long_link = short_link_service.get_link(short_link)
+    
+    if is_valid_url(long_link) is False:
+        raise HTTPException(
+            status_code=400,
+            detail="Вы ввели некорректную ссылку"
+                            )
     
     if long_link is None:
         raise HTTPException(

@@ -1,5 +1,4 @@
 from utils.utils_random import random_alfnum
-
 class ShortLinkService:
     def __init__(self):
         self.short_link_to_long_link : dict[str.str]={}    
@@ -8,7 +7,14 @@ class ShortLinkService:
         return self.short_link_to_long_link.get(short_link)
     
     def put_link(self,long_link:str)->str:
+        
+        long_link = long_link.strip()
+        if not long_link.startswith(('http://', 'https://')): ## Проверка ссылки на наличие протокола
+            long_link = 'https://' + long_link
+        
         short_link=random_alfnum(n=5)
         self.short_link_to_long_link[short_link]=long_link
         
         return short_link
+    
+    
