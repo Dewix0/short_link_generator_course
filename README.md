@@ -34,4 +34,6 @@ __Completed Implementations__
 
  3) автоматическую подстановку https:// если в начале поданной ссылки нет этого протакола - DONE (short_link_service.py)
 
+ 4) Работа с базой данных sqlalchemy - DONE (persistent/db ) ( repositories)
+
  
