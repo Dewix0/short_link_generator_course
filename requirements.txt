@@ -1,2 +1,5 @@
 fastapi
 uvicorn
+SQLAlchemy
+aiosqlite 
+greenlet
