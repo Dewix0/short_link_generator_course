@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Response , Path , HTTPException
 from pydantic import BaseModel
-#from services.short_link_service import ShortLinkService
 from services.short_link_service import ShortLinkService
 import re
+
 
 
 
@@ -10,6 +10,10 @@ app=FastAPI(title='Сервис генерации коротких ссылок
             description="Простенький тестовый сервис для создания коротких ссылок"
 )
 short_link_service=ShortLinkService()
+
+
+
+
 
 @app.get("/health")
 def health() -> str:
