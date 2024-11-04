@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Response , Path , HTTPException
 from pydantic import BaseModel
+#from services.short_link_service import ShortLinkService
 from services.short_link_service import ShortLinkService
 import re
 
@@ -24,6 +25,14 @@ class PutLink(BaseModel):
     Ссылка 
     """
     link:str
+    
+def _service_link_to_real(short_link: str) -> str:
+    
+    """ 
+    возвращение ссылки уже с localhost
+    """
+    return f"http://localhost:8000/short/{short_link}"   
+    
 
 @app.put("/link")
 async def put_link(long_link:PutLink) -> PutLink:
@@ -31,9 +40,8 @@ async def put_link(long_link:PutLink) -> PutLink:
     Метод создания короткой ссылки по длинной
     """
 
-    short_link= await short_link_service.put_link(long_link.link)
-    
-    return PutLink(link=f'http://localhost:8000/short/{short_link}')
+    short_link = await short_link_service.put_link(long_link.link)
+    return PutLink(link=_service_link_to_real(short_link))
 
 
 def is_valid_url(url): ## Проверка ссылки на корректность
@@ -49,27 +57,25 @@ def is_valid_url(url): ## Проверка ссылки на корректно�
     return re.match(regex, url) is not None
 
 
-
-@app.get("/short/{short_link}")
-async def get_link(short_link:str=Path(...)) -> Response:
+@app.get("/short/{link}")
+async def get_link(link:str=Path(...)) -> Response:
     """ 
     Метод переадресации с короткой ссылки на длинную
     """
     
-    long_link = await short_link_service.get_link(short_link)
-    
-    if is_valid_url(long_link) is False:
-        raise HTTPException(
-            status_code=400,
-            detail="Вы ввели некорректную ссылку , либо такого сайта не существует"
-                            )
-    
-    # if long_link is None:
+    long_link = await short_link_service.get_long_link(link)
+
+    # if is_valid_url(long_link) is False:
     #     raise HTTPException(
-    #         status_code=404,
-    #         detail="Упс, мы не нашли эту ссылку"
-    #                         )
+    #         status_code=400,
+    #         detail="Вы ввели некорректную ссылку , либо такого сайта не существует"
+    #                         )  ПОЧЕМУ-ТО перестало работать  - TO DO
     
+    if long_link is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Упс, мы не нашли эту ссылку"
+                            )
     return Response(
         content=None, 
         headers={"Location": long_link},
