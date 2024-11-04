@@ -23,4 +23,3 @@ class ShortLinkService:
         
         return await self.link_repository.get_real_link(short_link =short_link)
     
-    
